@@ -1,18 +1,32 @@
+// Halftone dot overlay for URP.
+// Put it in a second material slot; the original material renders as usual
+// and this draws lit dots on top.
+//
+// Dot Space decides how the dot grid is laid out:
+//   World Triplanar  - grid fixed in the world, projected from 3 axes (stretches on curves)
+//   Object Triplanar - same, but the grid moves with the object
+//   Screen (Object)  - perfect round dots, centred on the object and scaled with distance
+//   Screen (Fixed)   - perfect round dots fixed to the screen (objects slide through them)
+//   UV               - dots follow the mesh UVs (only even if the UVs are)
 Shader "Custom/HalftoneOverlay"
 {
     Properties
     {
+        [KeywordEnum(WorldTriplanar, ObjectTriplanar, ScreenObject, ScreenFixed, UV)]
+        _DotSpace ("Dot Space", Float) = 0
+
         [HDR] _DotColor ("Dot Color", Color) = (1, 1, 1, 1)
         _DotStrength ("Dot Opacity", Range(0, 1)) = 0.6
         _LightTintAmount ("Tint Dots By Light Colour", Range(0, 1)) = 0
 
+        // World/Object/Screen (Object): world units. Screen (Fixed): fraction of screen height. UV: fraction of UV space.
         _DotSpacing ("Dot Spacing", Range(0.02, 1)) = 0.125
         _DotSize ("Dot Size", Range(0.05, 0.7)) = 0.35
         _EdgeSoftness ("Dot Edge Softness", Range(0, 0.3)) = 0.05
 
         _OffsetX ("Move Dots X", Range(0, 1)) = 0
         _OffsetY ("Move Dots Y", Range(0, 1)) = 0
-        _OffsetZ ("Move Dots Z", Range(0, 1)) = 0
+        _OffsetZ ("Move Dots Z (triplanar only)", Range(0, 1)) = 0
 
         _LightGain ("Light Gain", Range(0.5, 3)) = 1.5
         _LightBias ("Light Bias", Range(0, 1)) = 0
@@ -21,7 +35,6 @@ Shader "Custom/HalftoneOverlay"
         _LightSizeInfluence ("Light Shrinks Dots", Range(0, 1)) = 0
 
         _TriSharp ("Triplanar Sharpness", Range(1, 16)) = 4
-        [Toggle] _ObjectSpace ("Stick Dots To Object", Float) = 0
     }
 
     SubShader
@@ -52,7 +65,7 @@ Shader "Custom/HalftoneOverlay"
             #pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
             #pragma multi_compile _ _ADDITIONAL_LIGHT_SHADOWS
             #pragma multi_compile _ _FORWARD_PLUS
-            #pragma shader_feature_local _OBJECTSPACE_ON
+            #pragma shader_feature_local _DOTSPACE_WORLDTRIPLANAR _DOTSPACE_OBJECTTRIPLANAR _DOTSPACE_SCREENOBJECT _DOTSPACE_SCREENFIXED _DOTSPACE_UV
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
@@ -79,6 +92,7 @@ Shader "Custom/HalftoneOverlay"
             {
                 float4 positionOS : POSITION;
                 float3 normalOS : NORMAL;
+                float2 uv : TEXCOORD0;
             };
 
             struct Varyings
@@ -88,6 +102,7 @@ Shader "Custom/HalftoneOverlay"
                 float3 normalWS : TEXCOORD1;
                 float3 positionOS : TEXCOORD2;
                 float3 normalOS : TEXCOORD3;
+                float2 uv : TEXCOORD4;
             };
 
             Varyings vert(Attributes input)
@@ -101,14 +116,15 @@ Shader "Custom/HalftoneOverlay"
                 output.normalWS = nrm.normalWS;
                 output.positionOS = input.positionOS.xyz;
                 output.normalOS = input.normalOS;
+                output.uv = input.uv;
                 return output;
             }
 
             // One dot per grid cell. Size and softness are in cell units,
             // so they don't depend on the lighting.
-            float DotMask(float2 uv, float radius)
+            float DotMask(float2 grid, float radius)
             {
-                float dist = length(frac(uv) - 0.5);
+                float dist = length(frac(grid) - 0.5);
                 float soft = max(_EdgeSoftness, 0.001);
                 return 1.0 - smoothstep(radius - soft, radius + soft, dist);
             }
@@ -124,6 +140,34 @@ Shader "Custom/HalftoneOverlay"
                 return DotMask(p.zy, radius) * weights.x
                      + DotMask(p.xz, radius) * weights.y
                      + DotMask(p.xy, radius) * weights.z;
+            }
+
+            // Screen position with the screen height as 1 unit, x corrected for aspect ratio
+            float2 ScreenCoords(float2 screenUV)
+            {
+                return float2(screenUV.x * _ScreenParams.x / _ScreenParams.y, screenUV.y);
+            }
+
+            // Grid centred on the object's origin. Scaled by the object's depth so
+            // dots keep the same size relative to the object as the camera moves.
+            float2 ScreenObjectGrid(float2 screenUV)
+            {
+                float3 originWS = UNITY_MATRIX_M._m03_m13_m23;
+                float2 originUV = ComputeNormalizedDeviceCoordinatesWithZ(originWS, UNITY_MATRIX_VP).xy;
+
+                float viewHeight;
+                if (unity_OrthoParams.w > 0.5)
+                {
+                    viewHeight = 2.0 * unity_OrthoParams.y;
+                }
+                else
+                {
+                    float depth = -TransformWorldToView(originWS).z;
+                    viewHeight = 2.0 * depth / unity_CameraProjection._m11;
+                }
+
+                float2 offsetFromOrigin = ScreenCoords(screenUV) - ScreenCoords(originUV);
+                return offsetFromOrigin * viewHeight / max(_DotSpacing, 0.001) + float2(_OffsetX, _OffsetY);
             }
 
             float4 frag(Varyings input) : SV_Target
@@ -159,10 +203,19 @@ Shader "Custom/HalftoneOverlay"
                 // Dots get smaller in weaker light if Light Shrinks Dots is turned up
                 float radius = _DotSize * lerp(1.0, lit, _LightSizeInfluence);
 
-                #if defined(_OBJECTSPACE_ON)
-                    float shape = TriplanarDots(input.positionOS, normalize(input.normalOS), radius);
+                float2 screenUV = GetNormalizedScreenSpaceUV(input.positionCS);
+                float shape;
+
+                #if defined(_DOTSPACE_OBJECTTRIPLANAR)
+                    shape = TriplanarDots(input.positionOS, normalize(input.normalOS), radius);
+                #elif defined(_DOTSPACE_SCREENOBJECT)
+                    shape = DotMask(ScreenObjectGrid(screenUV), radius);
+                #elif defined(_DOTSPACE_SCREENFIXED)
+                    shape = DotMask(ScreenCoords(screenUV) / max(_DotSpacing, 0.001) + float2(_OffsetX, _OffsetY), radius);
+                #elif defined(_DOTSPACE_UV)
+                    shape = DotMask(input.uv / max(_DotSpacing, 0.001) + float2(_OffsetX, _OffsetY), radius);
                 #else
-                    float shape = TriplanarDots(input.positionWS, normalWS, radius);
+                    shape = TriplanarDots(input.positionWS, normalWS, radius);
                 #endif
 
                 // Lighting is per pixel, so dots on a light gradient end up half faded

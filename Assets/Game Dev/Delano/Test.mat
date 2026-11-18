@@ -11,7 +11,8 @@ Material:
   m_Shader: {fileID: 4800000, guid: dabccc419a2a3f04fa99642938ef48f0, type: 3}
   m_Parent: {fileID: 2100000, guid: b7a0c5116cbf921469fdbe301d0f5f2a, type: 2}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
+  m_ValidKeywords:
+  - _DOTSPACE_UV
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -26,12 +27,16 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
-    - _DotSize: 0.35
-    - _DotSpacing: 0.214
-    - _DotStrength: 0.622
+    - _DotSize: 0.302
+    - _DotSpace: 4
+    - _DotSpacing: 0.116
+    - _DotStrength: 0.7
     - _EdgeSoftness: 0
-    - _LightGain: 1.5
+    - _LightBias: 0.096
+    - _LightGain: 0.86
     - _LightSizeInfluence: 0
+    - _LightSoftness: 0.429
+    - _LightThreshold: 0.152
     - _LightTintAmount: 0
     - _ObjectSpace: 0
     - _OffsetX: 0
