@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -20,10 +22,12 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float walkSpeed;
     [SerializeField] private float rotateSpeed;
 
-    private void OnEnable()
-    {
-        playerControls.FindActionMap("Xbox Controller").Enable();
-    }
+    private bool activateMovement;
+
+    //private void OnEnable()
+    //{
+    //    playerControls.FindActionMap("Xbox Controller").Enable();
+    //}
 
     private void OnDisable()
     {
@@ -40,11 +44,6 @@ public class PlayerMovement : MonoBehaviour
         camera = Camera.main.gameObject;
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-    }
-
     private void Update()
     {
         moveAmount = walkAction.ReadValue<Vector2>();
@@ -57,9 +56,17 @@ public class PlayerMovement : MonoBehaviour
     }
 
 
+    public void ActivateMovement(InputAction.CallbackContext context)
+    {
+        if (!activateMovement)
+        {
+            activateMovement = true;
+        }
+    }
+
     private void Movement()
     {
-        if(moveAmount.x != 0 || moveAmount.y != 0)
+        if(moveAmount.x != 0 || moveAmount.y != 0 && activateMovement)
         {
             Vector3 camRight = camera.transform.right;
             camRight.y = 0;
@@ -82,6 +89,10 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             rb.linearVelocity = new Vector3(0, 0, 0);
+            activateMovement = false;
         }
+
     }
 }
+
+
