@@ -24,30 +24,66 @@ public class PlayerMovement : MonoBehaviour
 
     private bool activateMovement;
 
+    [Header("Interact")]
+    [SerializeField] GameObject interactableObject;
+    [SerializeField] bool canInteract = false;
+    [SerializeField] InputAction interactAction;
+    [SerializeField] bool PickedUp = false;
+    [SerializeField] GameObject SnapPoint;
+
+
     //private void OnEnable()
     //{
     //    playerControls.FindActionMap("Xbox Controller").Enable();
     //}
 
+    [SerializeField] private InputActionReference InteractButton;
+
+    private void OnEnable()
+    {
+        InteractButton.action.Enable();
+        InteractButton.action.performed += Interact;
+    }
     private void OnDisable()
     {
         playerControls.FindActionMap("Xbox Controller").Disable();
+        InteractButton.action.Disable();
     }
 
     private void Awake()
     {
         walkAction = playerControls.FindAction("Walking");
         rotateAction = playerControls.FindAction("Rotating");
-        
+        interactAction = playerControls.FindAction("Interact");
+
         rb = GetComponent<Rigidbody>();
 
         camera = Camera.main.gameObject;
+    }
+
+
+
+
+    //Interact with the object if A is pressed and the player is in range of the object.
+    private void Interact(InputAction.CallbackContext context)
+    {
+        if(canInteract && interactableObject != null)
+        {
+            Debug.Log("A button pressed!");
+            GameObject food = interactableObject.GetComponent<Interactable>().IE_Interact();
+            GameObject foodInstance = Instantiate(food, SnapPoint.transform.position, SnapPoint.transform.rotation);
+            foodInstance.transform.parent = SnapPoint.transform;
+            foodInstance.transform.localPosition = Vector3.zero;
+
+        }
     }
 
     private void Update()
     {
         moveAmount = walkAction.ReadValue<Vector2>();
         rotateAmount = rotateAction.ReadValue<Vector2>();
+
+        //InteractInput();
     }
 
     private void FixedUpdate()
@@ -93,6 +129,31 @@ public class PlayerMovement : MonoBehaviour
         }
 
     }
+
+    //Detect if the player is in range of an interactable object and set the canInteract variable to true.
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.gameObject.TryGetComponent<Interactable>(out var interactable))
+        {
+            //interactable.IE_Interact();
+            Debug.Log("Enter");
+            interactableObject = other.gameObject;
+            canInteract = true;
+        }
+    }
+
+    //Detect if the player is out of range of an interactable object and set the canInteract variable to false.
+    private void OnTriggerExit(Collider other)
+    {
+        if(canInteract && other.gameObject == interactableObject)
+        {
+            canInteract = false;
+            interactableObject = null;
+            Debug.Log("Exited");
+        }
+      
+    }
+
 }
 
 
