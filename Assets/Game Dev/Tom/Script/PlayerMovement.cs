@@ -53,28 +53,14 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        Walking();
-        //RotateTowardsVector();
-        Rotating();
-
-        //Debug.Log(rotateAmount.x);
+        Movement();
     }
 
 
-    private void Walking()
+    private void Movement()
     {
-        //rb.transform.Translate(moveAmount.x * Time.deltaTime * walkSpeed, 0, moveAmount.y * Time.deltaTime * walkSpeed);
-
-        //if (rotateAmount.x != 0 || rotateAmount.y != 0)
-        //{
-        //    Vector3 pos = (camera.transform.position + new Vector3(rotateAmount.x, 0, rotateAmount.y)) - camera.transform.position;
-        //    rb.rotation = Quaternion.LookRotation(new Vector3(pos.x, pos.y, pos.z));
-        //}
-
         if(moveAmount.x != 0 || moveAmount.y != 0)
         {
-            //rb.MovePosition(rb.position + (rb.transform.forward * walkSpeed) * Time.deltaTime);
-
             Vector3 camRight = camera.transform.right;
             camRight.y = 0;
 
@@ -90,29 +76,12 @@ public class PlayerMovement : MonoBehaviour
             rb.linearVelocity = new Vector3(moveDir.x, rb.linearVelocity.y, moveDir.z);
 
             transform.forward = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+
+            //transform.forward = new Vector3(Mathf.MoveTowards(transform.forward.x, rb.linearVelocity.x, 1f), 0, Mathf.MoveTowards(transform.forward.z, rb.linearVelocity.z, 1f));
         }
-
+        else
+        {
+            rb.linearVelocity = new Vector3(0, 0, 0);
+        }
     }
-    private void Rotating()
-    {
-        //float rotationAmount = rotateAmount.x * rotateSpeed * Time.deltaTime;
-        //Quaternion deltaRotation = Quaternion.Euler(0, rotationAmount, 0);
-        //rb.MoveRotation(rb.rotation * deltaRotation);
-
-        //rb.rotation = Quaternion.Euler(rb.rotation.x, rotateAmount.y * Time.deltaTime * rotateSpeed, rb.rotation.z);
-        //if (rotateAmount.x != 0 || rotateAmount.y != 0)
-        //{
-        //    Vector3 pos = (transform.position + new Vector3(rotateAmount.x, 0, rotateAmount.y)) - transform.position;
-        //    rb.rotation = Quaternion.LookRotation(pos);
-        //}
-    }
-
-    //public void RotateTowardsVector()
-    //{
-    //    var xzDirection = new Vector3(moveAmount.y, 0, 0);
-    //    if (xzDirection.magnitude == 0) return;
-
-    //    var rotation = Quaternion.LookRotation(xzDirection);
-    //    rb.transform.rotation = Quaternion.RotateTowards(rb.transform.rotation, rotation, rotateSpeed);
-    //}
 }
