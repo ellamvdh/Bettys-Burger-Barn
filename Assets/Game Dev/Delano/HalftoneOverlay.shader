@@ -1,13 +1,4 @@
-// Halftone dot overlay for URP.
-// Put it in a second material slot; the original material renders as usual
-// and this draws lit dots on top.
-//
-// Dot Space decides how the dot grid is laid out:
-//   World Triplanar  - grid fixed in the world, projected from 3 axes (stretches on curves)
-//   Object Triplanar - same, but the grid moves with the object
-//   Screen (Object)  - perfect round dots, centred on the object and scaled with distance
-//   Screen (Fixed)   - perfect round dots fixed to the screen (objects slide through them)
-//   UV               - dots follow the mesh UVs (only even if the UVs are)
+// Put this in a second material slot, the original material renders as usual
 Shader "Custom/HalftoneOverlay"
 {
     Properties
@@ -19,7 +10,7 @@ Shader "Custom/HalftoneOverlay"
         _DotStrength ("Dot Opacity", Range(0, 1)) = 0.6
         _LightTintAmount ("Tint Dots By Light Colour", Range(0, 1)) = 0
 
-        // World/Object/Screen (Object): world units. Screen (Fixed): fraction of screen height. UV: fraction of UV space.
+        // world units, except Screen (Fixed) = fraction of screen height and UV = fraction of UV space
         _DotSpacing ("Dot Spacing", Range(0.02, 1)) = 0.125
         _DotSize ("Dot Size", Range(0.05, 0.7)) = 0.35
         _EdgeSoftness ("Dot Edge Softness", Range(0, 0.3)) = 0.05
@@ -54,7 +45,7 @@ Shader "Custom/HalftoneOverlay"
             Blend SrcAlpha OneMinusSrcAlpha
             ZWrite Off
             ZTest LEqual
-            Offset -1, -1 // stops z-fighting with the surface underneath
+            Offset -1, -1
 
             HLSLPROGRAM
             #pragma vertex vert
@@ -120,8 +111,6 @@ Shader "Custom/HalftoneOverlay"
                 return output;
             }
 
-            // One dot per grid cell. Size and softness are in cell units,
-            // so they don't depend on the lighting.
             float DotMask(float2 grid, float radius)
             {
                 float dist = length(frac(grid) - 0.5);
@@ -129,7 +118,6 @@ Shader "Custom/HalftoneOverlay"
                 return 1.0 - smoothstep(radius - soft, radius + soft, dist);
             }
 
-            // Project the grid along all three axes and blend by surface normal
             float TriplanarDots(float3 pos, float3 normal, float radius)
             {
                 float3 weights = pow(abs(normal), _TriSharp);
@@ -142,14 +130,13 @@ Shader "Custom/HalftoneOverlay"
                      + DotMask(p.xy, radius) * weights.z;
             }
 
-            // Screen position with the screen height as 1 unit, x corrected for aspect ratio
+            // screen height = 1 unit, x corrected for aspect ratio
             float2 ScreenCoords(float2 screenUV)
             {
                 return float2(screenUV.x * _ScreenParams.x / _ScreenParams.y, screenUV.y);
             }
 
-            // Grid centred on the object's origin. Scaled by the object's depth so
-            // dots keep the same size relative to the object as the camera moves.
+            // grid centred on the object's origin, scaled by its depth so dots keep their size on the object
             float2 ScreenObjectGrid(float2 screenUV)
             {
                 float3 originWS = UNITY_MATRIX_M._m03_m13_m23;
@@ -174,7 +161,6 @@ Shader "Custom/HalftoneOverlay"
             {
                 float3 normalWS = normalize(input.normalWS);
 
-                // Add up the light hitting this pixel
                 Light mainLight = GetMainLight(TransformWorldToShadowCoord(input.positionWS));
                 float3 lightColor = mainLight.color
                     * saturate(dot(normalWS, mainLight.direction))
@@ -200,7 +186,6 @@ Shader "Custom/HalftoneOverlay"
                 float brightness = dot(lightColor, float3(0.299, 0.587, 0.114));
                 float lit = saturate(brightness * _LightGain + _LightBias);
 
-                // Dots get smaller in weaker light if Light Shrinks Dots is turned up
                 float radius = _DotSize * lerp(1.0, lit, _LightSizeInfluence);
 
                 float2 screenUV = GetNormalizedScreenSpaceUV(input.positionCS);
@@ -218,7 +203,6 @@ Shader "Custom/HalftoneOverlay"
                     shape = TriplanarDots(input.positionWS, normalWS, radius);
                 #endif
 
-                // Lighting is per pixel, so dots on a light gradient end up half faded
                 float fade = smoothstep(_LightThreshold, _LightThreshold + _LightSoftness, lit);
 
                 float3 lightTint = normalize(lightColor + 1e-4) * 0.5 + 0.5;

@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Test2
   m_Shader: {fileID: 4800000, guid: dabccc419a2a3f04fa99642938ef48f0, type: 3}
-  m_Parent: {fileID: 2100000, guid: b7a0c5116cbf921469fdbe301d0f5f2a, type: 2}
+  m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _DOTSPACE_WORLDTRIPLANAR
@@ -27,17 +27,28 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
+    - _DotScale: 8
     - _DotSize: 0.254
+    - _DotSpace: 0
     - _DotSpacing: 0.296
     - _DotStrength: 0.779
     - _EdgeSoftness: 0.05
+    - _LightBias: 0
     - _LightGain: 1
+    - _LightSizeInfluence: 0
+    - _LightSoftness: 0.3
+    - _LightThreshold: 0.1
     - _LightTintAmount: 0.461
+    - _ObjectSpace: 0
     - _OffsetX: 0.287
     - _OffsetY: 0
     - _OffsetZ: 0.27
+    - _Softness: 0.176
+    - _Threshold: 0
     - _TriSharp: 8
-    m_Colors: []
+    m_Colors:
+    - _DotColor: {r: 1, g: 1, b: 1, a: 1}
+    - _Scroll: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &2947518443849031456
