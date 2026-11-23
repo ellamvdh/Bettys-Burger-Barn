@@ -30,6 +30,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] InputAction interactAction;
     [SerializeField] bool PickedUp = false;
     [SerializeField] GameObject SnapPoint;
+    [SerializeField] GameObject PickedUpItem;
 
 
     //private void OnEnable()
@@ -67,13 +68,19 @@ public class PlayerMovement : MonoBehaviour
     //Interact with the object if A is pressed and the player is in range of the object.
     private void Interact(InputAction.CallbackContext context)
     {
-        if(canInteract && interactableObject != null)
+        if(canInteract && interactableObject != null && !PickedUp)
         {
             Debug.Log("A button pressed!");
             GameObject food = interactableObject.GetComponent<Interactable>().IE_Interact();
             GameObject foodInstance = Instantiate(food, SnapPoint.transform.position, SnapPoint.transform.rotation);
             foodInstance.transform.parent = SnapPoint.transform;
             foodInstance.transform.localPosition = Vector3.zero;
+
+            PickedUp = true;
+
+            canInteract = false;
+            PickedUpItem = interactableObject;
+            interactableObject = null;
 
         }
     }
@@ -152,6 +159,16 @@ public class PlayerMovement : MonoBehaviour
             Debug.Log("Exited");
         }
       
+    }
+
+    public void DropItem()
+    {
+        if(PickedUp)
+        {
+            GameObject food = SnapPoint.transform.GetChild(0).gameObject;
+            food.transform.parent = null;
+            PickedUp = false;
+        }
     }
 
 }
