@@ -40,8 +40,6 @@ public class PlayerMovement : MonoBehaviour
     }
     PickUpState pickupstate = PickUpState.none;
     [SerializeField] bool PickedUp = false;
-    //[SerializeField] bool CanPlace = false;
-    //[SerializeField] bool CanPickUp = false;
     [SerializeField] Bord WhereToPlace;
     
 
@@ -76,10 +74,6 @@ public class PlayerMovement : MonoBehaviour
         camera = Camera.main.gameObject;
     }
 
-
-
-
-    
 
     private void Update()
     {
@@ -173,7 +167,7 @@ public class PlayerMovement : MonoBehaviour
     //Interact with the object if A is pressed and the player is in range of the object.
     private void Interact(InputAction.CallbackContext context)
     {
-        if (pickupstate == PickUpState.CanPickUp && PickedUp == false && WhereToPlace.HoldingSomething == true)
+        if (pickupstate == PickUpState.CanPickUp && WhereToPlace.HoldingSomething == true)
         {
             PickUp();
 
