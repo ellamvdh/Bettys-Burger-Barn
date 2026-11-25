@@ -79,51 +79,7 @@ public class PlayerMovement : MonoBehaviour
 
 
 
-    //Interact with the object if A is pressed and the player is in range of the object.
-    private void Interact(InputAction.CallbackContext context)
-    {
-        if(pickupstate == PickUpState.CanPickUp && PickedUp == false && WhereToPlace.HoldingSomething == true)
-        {
-            
-            WhereToPlace.HoldingObject.transform.parent = SnapPoint.transform;
-            WhereToPlace.HoldingObject.transform.localPosition = Vector3.zero;
-            WhereToPlace.HoldingSomething = false;
-            PickedUp = true;
-            PickedUpItem = WhereToPlace.HoldingObject;
-            WhereToPlace.HoldingObject = null;
-        }
-        if (PickedUp && pickupstate == PickUpState.CanPlace)
-        {
-            if (PickedUp && WhereToPlace.HoldingSomething == false)
-            {
-                PickedUpItem.transform.parent = WhereToPlace.Snap.transform;
-                PickedUpItem.transform.localPosition = Vector3.zero;
-                WhereToPlace.HoldingSomething = true;
-                WhereToPlace.HoldingObject = PickedUpItem;
-
-                PickedUp = false;
-                PickedUpItem = null;
-                Debug.Log("Dropped");
-                pickupstate = PickUpState.CanPickUp;
-            }
-        }
-        else if (canInteract && interactableObject != null && !PickedUp)
-        {
-            GameObject food = interactableObject.GetComponent<Interactable>().IE_Interact();
-            GameObject foodInstance = Instantiate(food, SnapPoint.transform.position, SnapPoint.transform.rotation);
-            foodInstance.transform.parent = SnapPoint.transform;
-            foodInstance.transform.localPosition = Vector3.zero;
-
-            PickedUp = true;
-
-            canInteract = false;
-
-            //pas dit aan
-            PickedUpItem = foodInstance;
-            interactableObject = null;
-
-        }
-    }
+    
 
     private void Update()
     {
@@ -214,7 +170,63 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
-    
+    //Interact with the object if A is pressed and the player is in range of the object.
+    private void Interact(InputAction.CallbackContext context)
+    {
+        if (pickupstate == PickUpState.CanPickUp && PickedUp == false && WhereToPlace.HoldingSomething == true)
+        {
+            PickUp();
+
+        }
+        if (PickedUp && pickupstate == PickUpState.CanPlace)
+        {
+            Place();
+        }
+        else if (canInteract && interactableObject != null && !PickedUp)
+        {
+            GrabObject();
+        }
+    }
+
+    private void PickUp()
+    {
+        WhereToPlace.HoldingObject.transform.parent = SnapPoint.transform;
+        WhereToPlace.HoldingObject.transform.localPosition = Vector3.zero;
+        WhereToPlace.HoldingSomething = false;
+        PickedUp = true;
+        PickedUpItem = WhereToPlace.HoldingObject;
+        WhereToPlace.HoldingObject = null;
+    }
+    private void Place()
+    {
+        if (PickedUp && WhereToPlace.HoldingSomething == false)
+        {
+            PickedUpItem.transform.parent = WhereToPlace.Snap.transform;
+            PickedUpItem.transform.localPosition = Vector3.zero;
+            WhereToPlace.HoldingSomething = true;
+            WhereToPlace.HoldingObject = PickedUpItem;
+
+            PickedUp = false;
+            PickedUpItem = null;
+            pickupstate = PickUpState.CanPickUp;
+        }
+    }
+    private void GrabObject()
+    {
+        GameObject food = interactableObject.GetComponent<Interactable>().IE_Interact();
+        GameObject foodInstance = Instantiate(food, SnapPoint.transform.position, SnapPoint.transform.rotation);
+        foodInstance.transform.parent = SnapPoint.transform;
+        foodInstance.transform.localPosition = Vector3.zero;
+
+        PickedUp = true;
+
+        canInteract = false;
+        PickedUpItem = foodInstance;
+        interactableObject = null;
+
+    }
+
+
 
 }
 
