@@ -28,12 +28,22 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] GameObject interactableObject;
     [SerializeField] bool canInteract = false;
     [SerializeField] InputAction interactAction;
-    [SerializeField] bool PickedUp = false;
+   
     [SerializeField] GameObject SnapPoint;
     [SerializeField] GameObject PickedUpItem;
-    [SerializeField] bool CanPlace = false;
+
+    enum PickUpState
+    {
+        none,
+        CanPlace,
+        CanPickUp
+    }
+    PickUpState pickupstate = PickUpState.none;
+    [SerializeField] bool PickedUp = false;
+    //[SerializeField] bool CanPlace = false;
+    //[SerializeField] bool CanPickUp = false;
     [SerializeField] Bord WhereToPlace;
-    [SerializeField] bool CanPickUp = false;
+    
 
 
 
@@ -72,7 +82,7 @@ public class PlayerMovement : MonoBehaviour
     //Interact with the object if A is pressed and the player is in range of the object.
     private void Interact(InputAction.CallbackContext context)
     {
-        if(CanPickUp && PickedUp == false && WhereToPlace.HoldingSomething == true)
+        if(pickupstate == PickUpState.CanPickUp && PickedUp == false && WhereToPlace.HoldingSomething == true)
         {
             
             WhereToPlace.HoldingObject.transform.parent = SnapPoint.transform;
@@ -82,7 +92,7 @@ public class PlayerMovement : MonoBehaviour
             PickedUpItem = WhereToPlace.HoldingObject;
             WhereToPlace.HoldingObject = null;
         }
-        if (PickedUp && CanPlace)
+        if (PickedUp && pickupstate == PickUpState.CanPlace)
         {
             if (PickedUp && WhereToPlace.HoldingSomething == false)
             {
@@ -94,12 +104,11 @@ public class PlayerMovement : MonoBehaviour
                 PickedUp = false;
                 PickedUpItem = null;
                 Debug.Log("Dropped");
-                CanPlace = false;
+                pickupstate = PickUpState.CanPickUp;
             }
         }
         else if (canInteract && interactableObject != null && !PickedUp)
         {
-            Debug.Log("A button pressed!");
             GameObject food = interactableObject.GetComponent<Interactable>().IE_Interact();
             GameObject foodInstance = Instantiate(food, SnapPoint.transform.position, SnapPoint.transform.rotation);
             foodInstance.transform.parent = SnapPoint.transform;
@@ -176,11 +185,11 @@ public class PlayerMovement : MonoBehaviour
             WhereToPlace = other.gameObject.GetComponent<Bord>();
             if(WhereToPlace.HoldingSomething == false)
             {
-                CanPlace = true;
+                pickupstate = PickUpState.CanPlace;
             }
             else
             {
-                CanPickUp = true;
+                pickupstate = PickUpState.CanPickUp;
             }
                
         }
@@ -200,21 +209,12 @@ public class PlayerMovement : MonoBehaviour
             interactableObject = null;
             Debug.Log("Exited");
         }
-        CanPlace = false;
         WhereToPlace = null;
-        CanPickUp = false;
+        pickupstate = PickUpState.none;
 
     }
 
-    public void DropItem()
-    {
-        if(PickedUp)
-        {
-            GameObject food = SnapPoint.transform.GetChild(0).gameObject;
-            food.transform.parent = null;
-            PickedUp = false;
-        }
-    }
+    
 
 }
 
