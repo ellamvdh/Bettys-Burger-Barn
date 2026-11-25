@@ -31,6 +31,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] bool PickedUp = false;
     [SerializeField] GameObject SnapPoint;
     [SerializeField] GameObject PickedUpItem;
+    [SerializeField] bool CanPlace = false;
+
 
 
     //private void OnEnable()
@@ -68,6 +70,7 @@ public class PlayerMovement : MonoBehaviour
     //Interact with the object if A is pressed and the player is in range of the object.
     private void Interact(InputAction.CallbackContext context)
     {
+        
         if(canInteract && interactableObject != null && !PickedUp)
         {
             Debug.Log("A button pressed!");
@@ -79,7 +82,9 @@ public class PlayerMovement : MonoBehaviour
             PickedUp = true;
 
             canInteract = false;
-            PickedUpItem = interactableObject;
+
+            //pas dit aan
+            PickedUpItem = foodInstance;
             interactableObject = null;
 
         }
@@ -140,7 +145,28 @@ public class PlayerMovement : MonoBehaviour
     //Detect if the player is in range of an interactable object and set the canInteract variable to true.
     private void OnTriggerEnter(Collider other)
     {
-        if(other.gameObject.TryGetComponent<Interactable>(out var interactable))
+        if(other.gameObject.TryGetComponent<Placeable>(out var placeable))
+        {
+            //placeable.OnPlace();
+            Debug.Log("Placed");
+
+            //check if the player is holding an item and if so, place it in the placeable object.
+            if(PickedUp && other.gameObject.GetComponent<Bord>().HoldingSomething == false)
+            {
+                PickedUpItem.transform.parent = other.GetComponent<Bord>().Snap.transform;
+                PickedUpItem.transform.localPosition = Vector3.zero;
+                other.GetComponent<Bord>().HoldingSomething = true;
+                other.GetComponent<Bord>().HoldingObject = PickedUpItem;
+
+                PickedUp = false;
+                PickedUpItem = null;
+                Debug.Log("Dropped");
+                CanPlace = true;
+                
+            }
+
+        }
+        else if (other.gameObject.TryGetComponent<Interactable>(out var interactable))
         {
             //interactable.IE_Interact();
             Debug.Log("Enter");
@@ -158,7 +184,8 @@ public class PlayerMovement : MonoBehaviour
             interactableObject = null;
             Debug.Log("Exited");
         }
-      
+        CanPlace = false;
+
     }
 
     public void DropItem()
