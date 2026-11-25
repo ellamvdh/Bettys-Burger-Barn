@@ -158,6 +158,23 @@ MonoBehaviour:
   rb: {fileID: 5911506160973473654}
   walkSpeed: 5
   rotateSpeed: 100
+  interactableObject: {fileID: 0}
+  canInteract: 0
+  interactAction:
+    m_Name: Interact
+    m_Type: 0
+    m_ExpectedControlType: 
+    m_Id: 31e63842-1e19-4633-9ca2-16bee5a9ba56
+    m_Processors: 
+    m_Interactions: 
+    m_SingletonActionBindings: []
+    m_Flags: 0
+    m_Priority: 0
+  SnapPoint: {fileID: 0}
+  PickedUpItem: {fileID: 0}
+  PickedUp: 0
+  WhereToPlace: {fileID: 0}
+  InteractButton: {fileID: 0}
 --- !u!114 &3481760443177667361
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -203,6 +220,10 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 9406d20f-c228-4bd7-9de0-bfe3af1896ef
     m_ActionName: Xbox Controller/Rotating
+  - m_PersistentCalls:
+      m_Calls: []
+    m_ActionId: bc49ab2d-083f-4cca-a84f-c3252d4165b4
+    m_ActionName: Xbox Controller/interact
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Xbox Controller
