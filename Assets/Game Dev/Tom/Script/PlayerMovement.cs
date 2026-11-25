@@ -33,6 +33,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] GameObject PickedUpItem;
     [SerializeField] bool CanPlace = false;
     [SerializeField] Bord WhereToPlace;
+    [SerializeField] bool CanPickUp = false;
 
 
 
@@ -71,7 +72,17 @@ public class PlayerMovement : MonoBehaviour
     //Interact with the object if A is pressed and the player is in range of the object.
     private void Interact(InputAction.CallbackContext context)
     {
-        if(PickedUp && CanPlace)
+        if(CanPickUp && PickedUp == false && WhereToPlace.HoldingSomething == true)
+        {
+            
+            WhereToPlace.HoldingObject.transform.parent = SnapPoint.transform;
+            WhereToPlace.HoldingObject.transform.localPosition = Vector3.zero;
+            WhereToPlace.HoldingSomething = false;
+            PickedUp = true;
+            PickedUpItem = WhereToPlace.HoldingObject;
+            WhereToPlace.HoldingObject = null;
+        }
+        if (PickedUp && CanPlace)
         {
             if (PickedUp && WhereToPlace.HoldingSomething == false)
             {
@@ -83,6 +94,7 @@ public class PlayerMovement : MonoBehaviour
                 PickedUp = false;
                 PickedUpItem = null;
                 Debug.Log("Dropped");
+                CanPlace = false;
             }
         }
         else if (canInteract && interactableObject != null && !PickedUp)
@@ -161,17 +173,19 @@ public class PlayerMovement : MonoBehaviour
     {
         if(other.gameObject.TryGetComponent<Placeable>(out var placeable))
         {
-            //placeable.OnPlace();
-            Debug.Log("Placed");
             WhereToPlace = other.gameObject.GetComponent<Bord>();
-            
-            
-            CanPlace = true;
+            if(WhereToPlace.HoldingSomething == false)
+            {
+                CanPlace = true;
+            }
+            else
+            {
+                CanPickUp = true;
+            }
+               
         }
         else if (other.gameObject.TryGetComponent<Interactable>(out var interactable))
         {
-            //interactable.IE_Interact();
-            Debug.Log("Enter");
             interactableObject = other.gameObject;
             canInteract = true;
         }
@@ -188,6 +202,7 @@ public class PlayerMovement : MonoBehaviour
         }
         CanPlace = false;
         WhereToPlace = null;
+        CanPickUp = false;
 
     }
 
