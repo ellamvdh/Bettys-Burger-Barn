@@ -37,8 +37,10 @@ public class RoleAssigner : MonoBehaviour
     {
         var walk = controls.FindAction("Walking");
         Vector2 v = walk.ReadValue<Vector2>();
+        if (v != Vector2.zero)
+            Debug.Log($"{name}: enabled={walk.enabled}, value={v}, device={walk.activeControl?.device.displayName}");
     }
-    
+
     private void OnDestroy()
     {
         controls.devices = null;
