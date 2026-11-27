@@ -9,6 +9,7 @@ public class Grab : MonoBehaviour, Interactable
 
     // Wordt afgevuurd zodra er een ingredient gekozen is
     public event Action<GameObject> OnIngredientChosen;
+    public GameObject canvas;
 
     public GameObject IE_Interact()
     {
@@ -29,7 +30,15 @@ public class Grab : MonoBehaviour, Interactable
     {
         if (other.CompareTag("Player"))
         {
+            canvas.SetActive(true);
+        }
+    }
 
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            canvas.SetActive(false);
         }
     }
 
