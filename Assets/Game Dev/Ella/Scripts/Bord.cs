@@ -7,16 +7,15 @@ public class Bord : MonoBehaviour, Placeable , Interactable
     [SerializeField] public GameObject Snap;
     [SerializeField] public bool HoldingSomething = false;
     [SerializeField] public GameObject HoldingObject;
-    [SerializeField] bool isPlate = true; //if is plate then dissapear 
     [SerializeField] List<string> IngredientsAdded = new List<string>();
-    public void OnPlace()
+    public virtual void OnPlace()
     {
         Debug.Log("Bord placed");
     }
 
-    private void Update()
+    protected virtual void Update()
     {
-        if (HoldingSomething && isPlate)
+        if (HoldingSomething )
         {
             IngredientsAdded.Add(HoldingObject.name);
             Destroy(HoldingObject);
@@ -25,7 +24,6 @@ public class Bord : MonoBehaviour, Placeable , Interactable
     }
     public GameObject IE_Interact()
     {
-        Debug.Log("Bord interacted");
         return null;
     }
 

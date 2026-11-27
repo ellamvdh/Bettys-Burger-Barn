@@ -201,7 +201,6 @@ public class PlayerMovement : MonoBehaviour
             PickedUpItem.transform.localPosition = Vector3.zero;
             WhereToPlace.HoldingSomething = true;
             WhereToPlace.HoldingObject = PickedUpItem;
-            WhereToPlace.OnPlace();
 
             PickedUp = false;
             PickedUpItem = null;
