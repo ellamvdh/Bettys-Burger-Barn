@@ -31,6 +31,8 @@ public class PlayerMovement : MonoBehaviour
    
     [SerializeField] GameObject SnapPoint;
     [SerializeField] GameObject PickedUpItem;
+    // De Grab waarvan het keuzemenu nu open staat
+    private Grab activeGrab;
 
     enum PickUpState
     {
@@ -205,9 +207,35 @@ public class PlayerMovement : MonoBehaviour
             pickupstate = PickUpState.CanPickUp;
         }
     }
+    
+
     private void GrabObject()
     {
         GameObject food = interactableObject.GetComponent<Interactable>().IE_Interact();
+
+        // Geen food terug = er staat een keuzemenu open, wacht op de knop
+        if (food == null)
+        {
+            if (interactableObject.TryGetComponent<Grab>(out var grab))
+            {
+                if (activeGrab != null) activeGrab.OnIngredientChosen -= SpawnFood;
+                activeGrab = grab;
+                activeGrab.OnIngredientChosen += SpawnFood;
+            }
+            return;
+        }
+
+        SpawnFood(food);
+    }
+
+    private void SpawnFood(GameObject food)
+    {
+        if (activeGrab != null)
+        {
+            activeGrab.OnIngredientChosen -= SpawnFood;
+            activeGrab = null;
+        }
+
         GameObject foodInstance = Instantiate(food, SnapPoint.transform.position, SnapPoint.transform.rotation);
         foodInstance.transform.parent = SnapPoint.transform;
         foodInstance.transform.localPosition = Vector3.zero;
@@ -217,7 +245,6 @@ public class PlayerMovement : MonoBehaviour
         canInteract = false;
         PickedUpItem = foodInstance;
         interactableObject = null;
-
     }
 
 
